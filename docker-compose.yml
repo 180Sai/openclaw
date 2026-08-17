@@ -1,5 +1,5 @@
 services:
-  openclaw-gateway:
+  gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     build: .
     env_file:
@@ -93,9 +93,9 @@ services:
       retries: 5
       start_period: 20s
 
-  openclaw-cli:
+  cli:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
-    network_mode: "service:openclaw-gateway"
+    network_mode: "service:gateway"
     env_file:
       - path: .env
         required: false
@@ -132,4 +132,4 @@ services:
     init: true
     entrypoint: ["node", "dist/index.js"]
     depends_on:
-      - openclaw-gateway
+      - gateway
