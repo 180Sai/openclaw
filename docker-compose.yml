@@ -1,8 +1,22 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18789:18789"
+    networks:
+      default:
+        ipv4_address: ${OPENCLAW_CADDY_IP:-172.19.0.10}
+    volumes:
+      - ./caddy-data/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-data/data:/data
+      - ./caddy-data/config:/config
+
   gateway:
     container_name: openclaw-gateway
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     build: .
+    # network_mode: host
     env_file:
       - path: .env
         required: false
@@ -44,7 +58,7 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       TZ: ${OPENCLAW_TZ:-UTC}
-    volumes:
+    volumes: &shared-volumes
       - "${OPENCLAW_CONFIG_DIR:-${HOME:-/tmp}/.openclaw}:/home/node/.openclaw"
       - "${OPENCLAW_WORKSPACE_DIR:-${HOME:-/tmp}/.openclaw/workspace}:/home/node/.openclaw/workspace"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw"
@@ -59,6 +73,7 @@ services:
     # Let bundled local-model providers reach host-side LM Studio/Ollama via
     # http://host.docker.internal:<port>. Docker Desktop usually provides this
     # alias; the host-gateway mapping makes it work on Linux Docker Engine too.
+      # - "/var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock"
     cap_drop:
       - NET_RAW
       - NET_ADMIN
@@ -66,10 +81,10 @@ services:
       - no-new-privileges:true
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
-      - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
-      - "${OPENCLAW_MSTEAMS_PORT:-3978}:3978"
+    # ports:
+    #   - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+    #   - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+    #   - "${OPENCLAW_MSTEAMS_PORT:-3978}:3978"
     init: true
     restart: unless-stopped
     command:
@@ -128,10 +143,7 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       TZ: ${OPENCLAW_TZ:-UTC}
-    volumes:
-      - "${OPENCLAW_CONFIG_DIR:-${HOME:-/tmp}/.openclaw}:/home/node/.openclaw"
-      - "${OPENCLAW_WORKSPACE_DIR:-${HOME:-/tmp}/.openclaw/workspace}:/home/node/.openclaw/workspace"
-      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw"
+    volumes: *shared-volumes
     stdin_open: true
     tty: true
     init: true
