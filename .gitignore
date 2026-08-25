@@ -239,5 +239,13 @@ extensions/discord/assets/embedded-app-sdk.mjs
 
 # Data
 openclaw-data*
+<<<<<<< HEAD
 caddy-data*
 ollama-data*
+=======
+<<<<<<< HEAD
+caddy-data
+=======
+caddy-data*
+>>>>>>> ff9cd052654 (add caddy-data to .gitignore)
+>>>>>>> b82b20cfe5f (add caddy-data to .gitignore)
