@@ -1,5 +1,6 @@
 services:
   gateway:
+    container_name: openclaw-gateway
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     build: .
     env_file:
@@ -92,8 +93,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    
+    networks:
+      - caddy-net
+      - oc-ollama-net
 
   cli:
+    container_name: openclaw-cli
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     network_mode: "service:gateway"
     env_file:
@@ -133,3 +139,24 @@ services:
     entrypoint: ["node", "dist/index.js"]
     depends_on:
       - gateway
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: openclaw-ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+    volumes:
+      - ./ollama-data:/root/.ollama
+    networks:
+      - oc-ollama-net
+
+networks:
+  caddy-net:
+    external: true
+  oc-ollama-net:
