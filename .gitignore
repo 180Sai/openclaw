@@ -240,3 +240,4 @@ extensions/discord/assets/embedded-app-sdk.mjs
 # Data
 openclaw-data*
 caddy-data*
+ollama-data*

@@ -79,4 +79,5 @@ vendor/
 
 # Data
 openclaw-data*
-caddy-data
+caddy-data*
+ollama-data*
