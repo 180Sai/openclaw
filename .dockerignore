@@ -78,4 +78,5 @@ vendor/
 !vendor/a2ui/renderers/lit/**
 
 # Data
-openclaw-data/
+openclaw-data*
+caddy-data
