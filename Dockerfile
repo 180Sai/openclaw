@@ -390,6 +390,48 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
         docker-ce-cli docker-compose-plugin; \
     fi
 
+# Optionally install Himalaya CLI for the bundled himalaya email skill.
+# Build with: docker build --build-arg OPENCLAW_INSTALL_HIMALAYA=1 ...
+ARG OPENCLAW_INSTALL_HIMALAYA=""
+ARG HIMALAYA_VERSION="2.1.0"
+# Pin the expected sha256 of himalaya-x86_64-linux.tar.gz for this version.
+ARG HIMALAYA_SHA256="683a2ab8e1534f01e6bda3a69e204d564c31fbfbe20511fc7bc60b67f2e85884"
+RUN set -eux; \
+    if [ -n "$OPENCLAW_INSTALL_HIMALAYA" ]; then \
+      arch="$(dpkg --print-architecture)"; \
+      case "$arch" in \
+        amd64) asset="himalaya.x86_64-linux.tgz" ;; \
+        arm64) asset="himalaya.aarch64-linux.tgz" ;; \
+        *) echo "ERROR: unsupported arch $arch for himalaya" >&2; exit 1 ;; \
+      esac; \
+      curl -fsSL --connect-timeout 10 --max-time 120 \
+        "https://github.com/pimalaya/himalaya/releases/download/v${HIMALAYA_VERSION}/${asset}" \
+        -o /tmp/himalaya.tar.gz; \
+      echo "${HIMALAYA_SHA256}  /tmp/himalaya.tar.gz" | sha256sum -c -; \
+      tar xz -C /tmp -f /tmp/himalaya.tar.gz himalaya; \
+      install -m 0755 /tmp/himalaya /usr/local/bin/himalaya; \
+      rm -f /tmp/himalaya /tmp/himalaya.tar.gz; \
+      himalaya --version; \
+    fi
+
+# Optionally stage missing runtime deps for the bundled Telegram plugin
+# (grammy's nested whatwg-url needs tr46 + webidl-conversions, which are
+# pruned by npm prune --omit=dev).
+# Build with: docker build --build-arg OPENCLAW_INSTALL_TELEGRAM=1 ...
+ARG OPENCLAW_INSTALL_TELEGRAM=""
+RUN set -eux; \
+    if [ -n "$OPENCLAW_INSTALL_TELEGRAM" ]; then \
+      curl -fsSL --connect-timeout 10 --max-time 60 \
+        "https://registry.npmjs.org/tr46/-/tr46-0.0.3.tgz" -o /tmp/tr46.tgz; \
+      curl -fsSL --connect-timeout 10 --max-time 60 \
+        "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-3.0.1.tgz" -o /tmp/wic.tgz; \
+      mkdir -p /app/node_modules/tr46 /app/node_modules/webidl-conversions; \
+      tar xzf /tmp/tr46.tgz -C /app/node_modules/tr46 --strip-components=1 package; \
+      tar xzf /tmp/wic.tgz -C /app/node_modules/webidl-conversions --strip-components=1 package; \
+      rm -f /tmp/tr46.tgz /tmp/wic.tgz; \
+      node -e "require('tr46');require('webidl-conversions')"; \
+    fi
+
 # Expose the CLI binary without requiring npm global writes as non-root.
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
  && chmod 755 /app/openclaw.mjs

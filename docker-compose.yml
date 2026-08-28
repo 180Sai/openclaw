@@ -15,7 +15,13 @@ services:
   gateway:
     container_name: openclaw-gateway
     image: ${OPENCLAW_IMAGE:-openclaw:local}
-    build: .
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        OPENCLAW_INSTALL_HIMALAYA: ${OPENCLAW_INSTALL_HIMALAYA:-}
+        OPENCLAW_INSTALL_TELEGRAM: ${OPENCLAW_INSTALL_TELEGRAM:-}
+        OPENCLAW_EXTENSIONS: ${OPENCLAW_EXTENSIONS:-}
     # network_mode: host
     env_file:
       - path: .env
@@ -121,6 +127,8 @@ services:
     env_file:
       - path: .env
         required: false
+    profiles:
+      - manual
     cap_drop:
       - NET_RAW
       - NET_ADMIN
