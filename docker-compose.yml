@@ -127,8 +127,6 @@ services:
     env_file:
       - path: .env
         required: false
-    profiles:
-      - manual
     cap_drop:
       - NET_RAW
       - NET_ADMIN
