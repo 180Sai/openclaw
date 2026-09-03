@@ -93,7 +93,7 @@ Docs: https://docs.openclaw.ai
 
 ### Complete contribution record
 
-This audited record covers the complete 999239d745d9cf73b0bf5c8791944565ecd3fcf2..0a57e25aef0049615b86974e58bf1742a0b63b99 history: 1,194 in-range PRs + 0 retained seed-only PRs = 1,194 unique PRs. The generation manifest also supplies direct commits as editorial input; the grouped notes above prioritize user impact.
+This audited record covers the complete 999239d745d9cf73b0bf5c8791944565ecd3fcf2..2434a64c16b652596afd9e4c911f0cd3e7ab288a history: 1,195 in-range PRs + 0 retained seed-only PRs = 1,195 unique PRs. The generation manifest also supplies direct commits as editorial input; the grouped notes above prioritize user impact.
 
 Shipped baseline exclusions: v2026.8.1 (14 PRs: #109622, #111527, #112678, #112967, #117561, #119051, #121394, #128548, #129174, #130030, #131220, #131228, #131717, #131811); v2026.8.2 (8 PRs: #133773, #133963, #134103, #134111, #134207, #134208, #134428, #134870).
 
@@ -1292,7 +1292,8 @@ Shipped baseline exclusions: v2026.8.1 (14 PRs: #109622, #111527, #112678, #1129
 - **PR #136771**
 - **PR #136798**
 - **PR #136968**
-- **PR #136395** Thanks @fuller-stack-dev.
+- **PR #136395** Thanks @fuller-stack-dev and @vincentkoc.
+- **PR #137012** Related #136881. Thanks @leilei3167 and @anordick.
 ## 2026.8.2
 
 ### Highlights
