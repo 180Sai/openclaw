@@ -93,7 +93,7 @@ Docs: https://docs.openclaw.ai
 
 ### Complete contribution record
 
-This audited record covers the complete 999239d745d9cf73b0bf5c8791944565ecd3fcf2..2ef043efe7d33cf99a18d0da0cb19bad86cec840 history: 1,190 in-range PRs + 0 retained seed-only PRs = 1,190 unique PRs. The generation manifest also supplies direct commits as editorial input; the grouped notes above prioritize user impact.
+This audited record covers the complete 999239d745d9cf73b0bf5c8791944565ecd3fcf2..9f31b4d643d27d264e374c1601c467e69eb06bd5 history: 1,192 in-range PRs + 0 retained seed-only PRs = 1,192 unique PRs. The generation manifest also supplies direct commits as editorial input; the grouped notes above prioritize user impact.
 
 Shipped baseline exclusions: v2026.8.1 (14 PRs: #109622, #111527, #112678, #112967, #117561, #119051, #121394, #128548, #129174, #130030, #131220, #131228, #131717, #131811); v2026.8.2 (8 PRs: #133773, #133963, #134103, #134111, #134207, #134208, #134428, #134870).
 
@@ -676,6 +676,7 @@ Shipped baseline exclusions: v2026.8.1 (14 PRs: #109622, #111527, #112678, #1129
 - **PR #134614** Thanks @RomneyDa.
 - **PR #134615** Thanks @RomneyDa.
 - **PR #135622** Related #135496.
+- **PR #135177**
 - **PR #135619** Related #135606.
 - **PR #135650** Related #135565.
 - **PR #135674**
@@ -1289,6 +1290,7 @@ Shipped baseline exclusions: v2026.8.1 (14 PRs: #109622, #111527, #112678, #1129
 - **PR #136609** Thanks @Patrick-Erichsen.
 - **PR #136770**
 - **PR #136771**
+- **PR #136796**
 ## 2026.8.2
 
 ### Highlights
