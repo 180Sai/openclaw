@@ -1,17 +1,4 @@
 services:
-  # caddy:
-  #   image: caddy:2-alpine
-  #   restart: unless-stopped
-  #   ports:
-  #     - "127.0.0.1:18789:18789"
-  #   networks:
-  #     default:
-  #       ipv4_address: ${OPENCLAW_CADDY_IP:-172.19.0.10}
-  #   volumes:
-  #     - ./caddy-data/Caddyfile:/etc/caddy/Caddyfile:ro
-  #     - ./caddy-data/data:/data
-  #     - ./caddy-data/config:/config
-
   gateway:
     container_name: openclaw-gateway
     image: ${OPENCLAW_IMAGE:-openclaw:local}
