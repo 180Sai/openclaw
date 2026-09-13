@@ -172,6 +172,11 @@ services:
     command: ["http", "--port", "3000"]
     networks:
       - oc-mcps-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
 
 
 networks:
