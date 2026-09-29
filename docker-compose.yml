@@ -150,6 +150,11 @@ services:
     image: ollama/ollama:latest
     container_name: openclaw-ollama
     restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: all
+      OLLAMA_DEBUG: 1
+      OLLAMA_FLASH_ATTENTION: 1
     deploy:
       resources:
         reservations:
