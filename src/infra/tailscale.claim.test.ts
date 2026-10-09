@@ -79,6 +79,18 @@ afterEach(() => {
 });
 
 describe("private Tailscale Serve claims", () => {
+  it("joins a cancelled Gateway claim even when readiness races shutdown", async () => {
+    const pending = queueOwner({ ready: false });
+    const controller = new AbortController();
+    const interrupted = new Error("Gateway stopped during startup");
+    const starting = claimTailscaleRoute("serve", 19000, 18789, vi.fn(), controller.signal);
+    await pending.started;
+    controller.abort(interrupted);
+    pending.owner.emit("message", { type: "ready" });
+    await expect(starting).rejects.toBe(interrupted);
+    expect(pending.owner.send).toHaveBeenCalledWith({ type: "stop" }, expect.any(Function));
+  });
+
   it.for([
     { boundary: "queue", revoke: true },
     { boundary: "queue", revoke: false },
