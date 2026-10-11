@@ -97,10 +97,8 @@ export async function createFullModelCatalogAccess(
       params.isCurrent() ? readUsage(store) : store,
     );
   const projectInventory = createPreparedModelCatalogProjection({ ...params, normalizeProvider });
-  const project = (
-    catalog: ModelCatalogSnapshot,
-    configuredRuntimeModels = params.catalogFacts.configuredRuntimeModels,
-  ) => attempt.withRefreshStatus(projectInventory(catalog, configuredRuntimeModels));
+  const project = (...args: Parameters<typeof projectInventory>) =>
+    attempt.withRefreshStatus(projectInventory(...args));
   const inventoryKey = preparedModelInventoryKey(params.agentFacts.input);
   const nativeSource = fingerprintPreparedRuntimeFacts({
     runtimePluginSelections: params.agentFacts.input.runtimePluginSelections,
@@ -180,7 +178,7 @@ export async function createFullModelCatalogAccess(
       retirementSignal: params.retirementSignal,
     }),
   );
-  const staticCatalog = project(params.catalogFacts.modelCatalog);
+  const staticCatalog = project({ catalog: params.catalogFacts.modelCatalog });
   if (hasNativeCatalog) {
     staticCatalog.authoritative = false;
   }
@@ -190,7 +188,7 @@ export async function createFullModelCatalogAccess(
     configuredRuntimeModels: Publication["configuredRuntimeModels"],
     acquiredNative: boolean,
   ): Publication => {
-    const catalog = project(nextInventory.catalog, configuredRuntimeModels);
+    const catalog = project(nextInventory, configuredRuntimeModels);
     setCatalogAuth(catalog, getPreparedModelFullCatalogAuth(nextInventory.catalog) ?? currentAuth);
     catalog.authoritative =
       acquiredNative && !catalog.refreshFailed ? catalog.authoritative : false;
@@ -449,7 +447,13 @@ export async function createFullModelCatalogAccess(
         throw failures[0]!.error;
       }
       if (!params.isCurrent()) {
-        const catalog = projectInventory(rawCatalog, params.catalogFacts.configuredRuntimeModels);
+        const catalog = projectInventory(
+          {
+            catalog: rawCatalog,
+            discoveryOrigins: capturedCatalog?.acceptedDiscoveryOrigins ?? [],
+          },
+          params.catalogFacts.configuredRuntimeModels,
+        );
         setCatalogAuth(
           catalog,
           getPreparedModelFullCatalogAuth(capturedCatalog ?? staticCatalog) ?? currentAuth,
