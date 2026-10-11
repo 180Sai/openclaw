@@ -26,6 +26,7 @@ import {
   packageActivationIdentity,
   type PackageActivationRecord,
 } from "./package-update-activation-journal.js";
+import { LEGACY_PACKAGE_RECOVERY_HELPER } from "./package-update-activation-paths.js";
 import {
   preparePackageActivationJournal,
   PackageActivationArchiveError,
@@ -235,6 +236,7 @@ export async function settlePendingPackageActivation(
 ) {
   const anchor = resolvePackageActivationAnchor(installKey);
   if (!expectedCompleted && !fs.existsSync(resolvePackageActivationJournalPath(anchor))) {
+    assertNoPendingPackageActivation(installKey);
     return undefined;
   }
   const journal = openPackageActivationJournal(anchor);
@@ -479,6 +481,12 @@ export async function runPackageActivationRecovery(
   const admission = await journal.readForRecovery();
   const initial = admission.record;
   assertPackageActivationOperation(initial, operationId);
+  const recoveryAction =
+    action === "repair" &&
+    initial.phase === "aborted" &&
+    initial.descriptor.helperDigest === LEGACY_PACKAGE_RECOVERY_HELPER
+      ? "retire"
+      : action;
   const complete = isPackageActivationComplete(anchor, initial);
   const authority = complete
     ? {
@@ -488,19 +496,6 @@ export async function runPackageActivationRecovery(
         ),
       }
     : initial.descriptor.authority;
-  if (!complete) {
-    // Reject malformed/foreign/disarmed recovery before acquiring a new writer.
-    // Admission is still followed by the same observations under the fresh fence.
-    await createPublicationOwner(
-      anchor,
-      journal,
-      () => {
-        assertManagedUpdateLeaseDatabaseIdentity(initial.descriptor.authority);
-      },
-      initial,
-      admission.assertUnchanged,
-    ).preflight(action);
-  }
   return withUpdateCommandExecutor(
     randomUUID(),
     async (executor) => {
@@ -520,7 +515,7 @@ export async function runPackageActivationRecovery(
         return status(initial);
       }
       const owner = createPublicationOwner(anchor, journal, fence.assertCurrent, initial);
-      return action === "repair" ? owner.publish(true) : owner.retire();
+      return recoveryAction === "repair" ? owner.publish(true) : owner.retire();
     },
     { existingAuthority: authority },
   );
