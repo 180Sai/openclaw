@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import * as ts from "typescript/unstable/ast";
 import { createNativeTypeScriptParser } from "./native-typescript.mts";
+import { isRecord as object } from "./record-shared.mjs";
 import { parseReleaseVersion } from "./release-version.mjs";
 import { standaloneRuntimeProcessBuildEntries } from "./runtime-process-core-build-entries.mts";
 import {
@@ -66,6 +67,7 @@ export type UpdateCompatibilityRelease = {
   buildId: string;
   commit: string;
   integrity: string;
+  schemaVersions?: unknown;
   chunks: UpdateCompatibilityChunk[];
 };
 export type UpdateCompatibilityInventory = {
@@ -248,6 +250,7 @@ export function recordUpdateCompatibilityRelease(params: {
     buildId: build.buildId,
     commit: build.commit,
     integrity: params.integrity,
+    schemaVersions: packageJson.openclaw?.schemaVersions,
     chunks: [...chunks.values()]
       .toSorted((a, b) => a.path.localeCompare(b.path))
       .map((chunk) => ({
@@ -258,9 +261,6 @@ export function recordUpdateCompatibilityRelease(params: {
   };
 }
 
-function object(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 function safeRelative(value: unknown): value is string {
   return (
     typeof value === "string" &&
@@ -355,6 +355,7 @@ export function parseUpdateCompatibilityInventory(
       buildId: release.buildId,
       commit: release.commit,
       integrity: release.integrity,
+      schemaVersions: release.schemaVersions,
       chunks,
     };
   });
