@@ -37,7 +37,8 @@ public actor GatewayChannelActor {
     private var password: String?
     private let authBindingKey: SymmetricKey?
     private let session: WebSocketSessioning
-    private var backoffMs: Double = 500
+    var backoffMs: Double = 500
+    var connectFailureBackoffWaitTask: Task<Void, Error>?
     var connectFailureBackoff = GatewayConnectFailureBackoff()
     private var shouldReconnect = true
     private nonisolated let socketAdmission = Mutex(true)
@@ -150,6 +151,8 @@ public actor GatewayChannelActor {
 
         self.watchdogTask?.cancel()
         self.watchdogTask = nil
+        self.connectFailureBackoffWaitTask?.cancel()
+        self.connectFailureBackoffWaitTask = nil
 
         self.tickTask?.cancel()
         self.tickTask = nil
