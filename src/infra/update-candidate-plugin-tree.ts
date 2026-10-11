@@ -99,6 +99,8 @@ export async function prepareUpdateCandidatePluginTrees(params: {
   candidateRoot: string;
   /** Retain selected host entries and the dependency owners reached from them. */
   retainedHostRoot?: string;
+  /** Installed runtime lookups stop at the package manager's owning project. */
+  retainedDependencyRoot?: string;
   onProgress?: () => void | Promise<void>;
 }): Promise<UpdateCandidatePluginTreePlan> {
   const roots = new Map(params.roots);
@@ -218,6 +220,10 @@ export async function prepareUpdateCandidatePluginTrees(params: {
     if (!isRecord(manifest)) {
       return;
     }
+    const boundary =
+      params.retainedDependencyRoot && isPathInside(params.retainedDependencyRoot, directory)
+        ? params.retainedDependencyRoot
+        : undefined;
     const names = new Set<string>();
     for (const field of ["dependencies", "optionalDependencies", "peerDependencies"]) {
       const dependencies = manifest[field];
@@ -259,7 +265,7 @@ export async function prepareUpdateCandidatePluginTrees(params: {
             break;
           }
         }
-        if (path.dirname(ancestor) === ancestor) {
+        if (ancestor === boundary || path.dirname(ancestor) === ancestor) {
           // Missing optional dependencies remain absent; validation owns required ones.
           break;
         }
