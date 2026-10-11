@@ -28,6 +28,11 @@ Context is _not the same thing_ as "memory": memory can be stored on disk and re
 
 See also: [Slash commands](/tools/slash-commands), [Token use & costs](/reference/token-use), [Compaction](/concepts/compaction).
 
+Status, context reports, and session lists use the selected model's discovered
+capacity and configured limits. If neither current metadata nor a matching
+verified budget is available, the denominator is `?` (`null` in session-list
+JSON); reports do not substitute a generic window or another model's capacity.
+
 The Control UI context meter uses the last run's prompt budget when it still
 matches the selected model and effective context cap. This budget leaves room
 for the runtime's compaction reserve. Its label is **Prompt budget (last run)**:
