@@ -36,15 +36,6 @@ export function resolvePackageActivationAnchor(installKey: string): string {
   return path.join(path.dirname(installKey), `${PACKAGE_ACTIVATION_PREFIX}${key}`);
 }
 
-export function isPackageActivationArtifactName(name: string): boolean {
-  return (
-    name.startsWith(PACKAGE_ACTIVATION_PREFIX) &&
-    /^[a-f0-9]{24}(?:\.control|\.superseded-[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})?$/u.test(
-      name.slice(PACKAGE_ACTIVATION_PREFIX.length),
-    )
-  );
-}
-
 export function resolvePackageActivationControl(anchor: string): string {
   return `${anchor}.control`;
 }
@@ -77,7 +68,9 @@ export function privatePackageActivationIdentity(file: string, directory: boolea
   const value = packageActivationIdentity(file, directory);
   const stat = fs.lstatSync(file);
   if ((stat.mode & 0o077) !== 0 || (!directory && stat.nlink !== 1)) {
-    throw new Error("Package publication recovery permissions are unsafe");
+    throw new Error(
+      `Package publication recovery permissions are unsafe${!directory && stat.nlink !== 1 ? ` (nlink=${stat.nlink}). Run openclaw doctor --fix.` : ""}`,
+    );
   }
   return value;
 }
