@@ -38,8 +38,9 @@ export function recordUpdateRunMutationInWorker(
     ...options,
     env: resolveUpdateRunCodecEnv(options.env, input.redactionFacts),
   };
+  // Take the host's initial grant before BEGIN IMMEDIATE; host latency must not hold the writer.
+  assertCurrent("transaction");
   return writer.run(({ db }) => {
-    assertCurrent("transaction");
     if (input.requireNoRecovery) {
       const recovery = readRecovery(db, input.runId);
       if (recovery) {
