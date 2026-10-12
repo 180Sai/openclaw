@@ -24,6 +24,9 @@ the managed Gateway's Node heap controls from its effective service command and
 clearing inherited preload and debugger flags. This requires the fix in the
 installed updater; an older updater cannot inherit it from the candidate it stages.
 
+Service-definition refresh recognizes Windows account aliases that resolve to the
+same SID. A different or unresolved account remains protected from automatic repair.
+
 Custom npm prefixes such as `~/.npm-global` are recognized from npm's configured
 prefix and the installed OpenClaw launcher. A prefix configured in `~/.npmrc`
 does not need a matching `NPM_CONFIG_PREFIX` environment variable. If no owner
