@@ -520,7 +520,7 @@ describe("prepared native catalog readiness", () => {
 });
 
 describe("runtime capability donors", () => {
-  it.each(["unrelated", "native-without-window", "native-without-api-fallback"])(
+  it.each(["unrelated", "native-without-window"])(
     "preserves logical fallback without borrowing native windows (%s)",
     (scenario) => {
       const base: ModelCatalogEntry = {
@@ -532,24 +532,21 @@ describe("runtime capability donors", () => {
       const routeVariants: ModelCatalogEntry[] =
         scenario === "unrelated"
           ? [{ provider: "fixture", id: "other", name: "Other" }]
-          : scenario === "native-without-api-fallback"
-            ? [base]
-            : [
-                {
-                  provider: "fixture",
-                  id: "model",
-                  name: "Model",
-                  nativeRuntime: "native-fixture",
-                },
-              ];
+          : [
+              {
+                provider: "fixture",
+                id: "model",
+                name: "Model",
+                nativeRuntime: "native-fixture",
+              },
+            ];
       const selected = selectModelCatalogRuntimeEntry({
         entry: base,
         routeVariants,
-        runtimeId: scenario === "unrelated" ? "openclaw" : "native-fixture",
-        allowApiFallback: scenario !== "native-without-api-fallback",
+        runtimeId: scenario === "native-without-window" ? "native-fixture" : "openclaw",
       });
       expect(selected.entry.contextWindows).toEqual(
-        scenario === "unrelated" ? base.contextWindows : undefined,
+        scenario === "native-without-window" ? undefined : base.contextWindows,
       );
     },
   );

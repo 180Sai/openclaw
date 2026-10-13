@@ -522,11 +522,6 @@ describe("session list resolver cache", () => {
         }),
       );
       writeResidentEntries(store);
-      const acpSessionKeys = new Set(
-        Object.entries(store)
-          .filter(([, entry]) => entry.acp)
-          .map(([sessionKey]) => sessionKey),
-      );
       const catalogSpy = vi.spyOn(modelCatalogLookup, "findModelCatalogEntry");
       let projection: SessionRowProjection | undefined;
       try {
@@ -560,11 +555,9 @@ describe("session list resolver cache", () => {
           expect(catalogRows).toHaveLength(40);
           for (const row of catalogRows) {
             expect(row.contextTokens).toBe(
-              acpSessionKeys.has(row.key)
-                ? undefined
-                : revision *
-                    (row.model === "Model-Hit" ? 2 : 1) *
-                    (row.agentId === "main" ? 10_000 : 20_000),
+              revision *
+                (row.model === "Model-Hit" ? 2 : 1) *
+                (row.agentId === "main" ? 10_000 : 20_000),
             );
             expect(row).not.toHaveProperty("catalogEntry");
           }

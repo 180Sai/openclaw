@@ -190,7 +190,6 @@ export function readSessionRowInputs(params: {
     modelContextTokens: catalogEntry?.contextTokens,
     modelContextWindow: contextWindowProfile.contextTokens,
     allowAsyncLoad: false,
-    allowCacheLookup: false,
   });
   const resolvedModelContextTokens = asPositiveFiniteNumber(modelContext.contextTokens);
 
@@ -250,7 +249,7 @@ export function readSessionRowInputs(params: {
         entry,
         provider,
         model,
-        agentHarnessId: thinkingProjection.capacityRuntime,
+        agentHarnessId: thinkingProjection.agentRuntime.id,
         resolvedContextTokens: contextWindowProfile.contextTokens
           ? Math.min(
               resolvedModelContextTokens ?? contextWindowProfile.contextTokens,

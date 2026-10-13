@@ -21,7 +21,7 @@ type SessionDisplayModelRow = {
 
 type SessionDisplayModelRef = { provider: string; model: string };
 
-function resolveSessionDisplayDefaults(
+export function resolveSessionDisplayDefaults(
   cfg: OpenClawConfig,
   agentId?: string,
 ): SessionDisplayModelRef {

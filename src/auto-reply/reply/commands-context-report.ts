@@ -6,7 +6,6 @@ import {
   buildBootstrapInjectionStats,
 } from "../../agents/bootstrap-budget.js";
 import { isRealConversationMessage } from "../../agents/compaction-real-conversation.js";
-import { resolveModelContextTokenProjection } from "../../agents/context.js";
 import {
   resolveBootstrapMaxChars,
   resolveBootstrapTotalMaxChars,
@@ -15,13 +14,8 @@ import {
   createMessageCharEstimateCache,
   estimateMessageCharsCached,
 } from "../../agents/embedded-agent-runner/tool-result-char-estimator.js";
-import { findModelInCatalog } from "../../agents/model-catalog-lookup.js";
-import { selectModelCatalogRuntimeEntry } from "../../agents/model-catalog-view.js";
-import { resolveModelContextWindowProfile } from "../../agents/model-context-window.js";
 import type { AgentMessage } from "../../agents/runtime/index.js";
 import { buildSystemPromptReport } from "../../agents/system-prompt-report.js";
-import { resolveEffectiveAgentRuntime } from "../../agents/thinking-runtime.js";
-import { resolveProjectedSessionContextTokens } from "../../config/sessions/context-token-provenance.js";
 import { resolveSessionStorePathForScope } from "../../config/sessions/session-store-path.js";
 import {
   resolveFreshSessionTotalTokens,
@@ -183,67 +177,12 @@ export async function buildContextReply(params: HandleCommandsParams): Promise<R
   }
 
   const cachedContextUsageTokens = resolveFreshSessionTotalTokens(targetSessionEntry);
-  const agentId = resolveContextReportAgentId(params);
-  const runtime = resolveEffectiveAgentRuntime({
-    cfg: params.cfg,
-    agentId,
-    sessionKey: params.sessionKey,
-    sessionEntry: targetSessionEntry,
-    provider: params.provider,
-    modelId: params.model,
-  });
-  const { getPreparedModelCatalogSnapshot } =
-    await import("../../agents/prepared-model-catalog.js");
-  const catalog = getPreparedModelCatalogSnapshot({
-    config: params.cfg,
-    agentId,
-    agentDir: params.agentDir,
-    workspaceDir: params.workspaceDir,
-  });
-  const entry = findModelInCatalog(catalog?.entries ?? [], params.provider, params.model);
-  const modelEntry = entry
-    ? selectModelCatalogRuntimeEntry({
-        entry,
-        routeVariants: catalog?.routeVariants ?? [],
-        runtimeId: runtime,
-        allowApiFallback: false,
-      }).entry
-    : catalog
-      ? undefined
-      : findModelInCatalog(
-          (params.thinkingCatalog ?? []).filter((candidate) =>
-            candidate.nativeRuntime
-              ? candidate.nativeRuntime === runtime
-              : ["openclaw", "auto", candidate.provider].includes(runtime),
-          ),
-          params.provider,
-          params.model,
-        );
-  const modelContext = resolveModelContextTokenProjection({
-    cfg: params.cfg,
-    provider: params.provider,
-    model: params.model,
-    modelContextTokens: modelEntry?.contextTokens,
-    modelContextWindow: resolveModelContextWindowProfile({
-      catalogEntry: modelEntry,
-      selected: targetSessionEntry?.contextWindow,
-    }).contextTokens,
-    allowCacheLookup: false,
-  });
   const session = {
     totalTokens: cachedContextUsageTokens ?? null,
     totalTokensFresh: targetSessionEntry ? cachedContextUsageTokens !== undefined : null,
     inputTokens: targetSessionEntry?.inputTokens ?? null,
     outputTokens: targetSessionEntry?.outputTokens ?? null,
-    contextTokens:
-      resolveProjectedSessionContextTokens({
-        entry: targetSessionEntry,
-        provider: params.provider,
-        model: params.model,
-        agentHarnessId: runtime,
-        resolvedContextTokens: modelContext.contextTokens,
-        authoredContextTokens: modelContext.authoredContextTokens,
-      }) ?? null,
+    contextTokens: params.contextTokens ?? null,
   } as const;
 
   if (sub === "map") {

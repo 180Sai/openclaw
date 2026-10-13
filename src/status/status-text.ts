@@ -7,12 +7,12 @@ import {
   resolveAgentModelFallbacksOverride,
 } from "../agents/agent-scope.js";
 import { ensureAuthProfileStore } from "../agents/auth-profiles/store-runtime.js";
+import { waitForContextWindowCacheLoad } from "../agents/context.js";
 import { resolveFastModeState } from "../agents/fast-mode.js";
 import { resolveAgentHarnessAutoSelectionHint } from "../agents/harness/auto-selection.js";
 import { resolveAgentHarnessPolicy } from "../agents/harness/policy.js";
 import { listRegisteredAgentHarnesses } from "../agents/harness/registry.js";
 import { findModelInCatalog } from "../agents/model-catalog-lookup.js";
-import { selectModelCatalogRuntimeEntry } from "../agents/model-catalog-view.js";
 import {
   areRuntimeModelRefsEquivalent,
   shouldPreferActiveRuntimeAliasAuthLabel,
@@ -259,6 +259,7 @@ export async function buildStatusReplyParts(
     statusChannel,
     provider,
     model,
+    contextTokens,
     thinkingCatalog,
     resolvedThinkLevel,
     resolvedFastMode,
@@ -311,7 +312,6 @@ export async function buildStatusReplyParts(
     workspaceDir: statusWorkspaceDir,
     readOnly: true,
   });
-  const owner = preparedOwner ? materializePreparedModelCatalogOwner(preparedOwner) : undefined;
   // This lookup borrows existing facts; status never starts inventory discovery.
   const resolveModel = createStatusModelResolver({
     cfg,
@@ -319,7 +319,7 @@ export async function buildStatusReplyParts(
     agentDir: statusAgentDir,
     workspaceDir: statusWorkspaceDir,
     sessionEntry,
-    owner,
+    owner: preparedOwner ? materializePreparedModelCatalogOwner(preparedOwner) : undefined,
   });
   const selectedStatusProvider = resolveStatusRuntimeProvider({
     provider: selectedLookupProvider,
@@ -523,37 +523,22 @@ export async function buildStatusReplyParts(
     sessionEntry,
   });
   const { buildStatusMessageParts } = await loadStatusMessageRuntime();
+  await waitForContextWindowCacheLoad();
   const configuredThinkingDefault = resolveConfiguredThinkingDefault({
     cfg,
     agentId: statusAgentId,
     provider: selectedLookupProvider,
     model: selectedLookupModel,
   });
-  const catalog = owner ? (owner.isCurrent() ? owner.modelCatalog : undefined) : undefined;
-  const contextCatalog = catalog
-    ? catalog.entries.map(
-        (entry) =>
-          selectModelCatalogRuntimeEntry({
-            entry,
-            routeVariants: catalog.routeVariants,
-            runtimeId: effectiveHarness ?? "openclaw",
-            allowApiFallback: false,
-          }).entry,
-      )
-    : owner
-      ? []
-      : (thinkingCatalog ?? []).filter((entry) =>
-          entry.nativeRuntime
-            ? entry.nativeRuntime === effectiveHarness
-            : ["openclaw", "auto", entry.provider].includes(effectiveHarness ?? "openclaw"),
-        );
+  const preparedContextTokens =
+    typeof contextTokens === "number" && contextTokens > 0 ? contextTokens : undefined;
   const selectedCatalogEntry = findModelInCatalog(
-    contextCatalog,
+    thinkingCatalog ?? [],
     selectedLookupProvider,
     selectedLookupModel,
   );
   const initialActiveCatalogEntry = findModelInCatalog(
-    contextCatalog,
+    thinkingCatalog ?? [],
     activeProvider,
     modelRefs.active.model || model,
   );
@@ -621,10 +606,17 @@ export async function buildStatusReplyParts(
     modelRefs,
     activeModel,
     selectedContextWindow: selectedCatalogEntry?.contextWindow,
-    selectedContextTokens: selectedCatalogEntry?.contextTokens,
-    thinkingCatalog: contextCatalog,
+    selectedContextTokens:
+      selectedCatalogEntry?.contextTokens ??
+      (selectedCatalogEntry && !activeRuntimeIsAuthoritative ? preparedContextTokens : undefined),
+    thinkingCatalog,
     runtimeContextProvider: activeRuntimeIsAuthoritative ? activeStatusProvider : undefined,
-    runtimeContextTokens: initialActiveCatalogEntry?.contextTokens,
+    runtimeContextTokens:
+      activeRuntimeIsAuthoritative &&
+      (initialActiveCatalogEntry || fallbackState.active) &&
+      (!activeModel || (activeModel.modelProvider === provider && activeModel.model === model))
+        ? preparedContextTokens
+        : undefined,
     sessionEntry,
     sessionKey,
     parentSessionKey,

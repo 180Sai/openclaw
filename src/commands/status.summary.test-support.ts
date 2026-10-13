@@ -51,15 +51,12 @@ export function registerStatusSummarySessionRowCases(params: {
         model: "broken-model",
       });
       params.rejectProviderStaticModel(new Error("static catalog unavailable"));
-      vi.mocked(params.getStatusSummaryRuntime().resolveContextTokensForModel).mockReturnValue(
-        undefined,
-      );
 
       await expect(params.getStatusSummary()).resolves.toMatchObject({
         sessions: {
           defaults: {
             model: "broken-model",
-            contextTokens: null,
+            contextTokens: 200_000,
           },
         },
       });

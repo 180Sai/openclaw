@@ -40,8 +40,6 @@ export type ContextTokenResolutionParams = {
   modelContextTokens?: number;
   allowAsyncLoad?: boolean;
   allowUnscopedModelLookup?: boolean;
-  /** Reports with admitted model facts must not reuse a different cache generation. */
-  allowCacheLookup?: boolean;
 };
 
 export type ModelContextTokenProjection = {
@@ -283,11 +281,12 @@ export function resolveModelContextTokenProjectionFromCache(
     if (fixedContextWindow !== undefined) {
       return { contextTokens: fixedContextWindow, authoredContextTokens };
     }
-    const providerKey = providerContextTokenCacheKey(normalizeProviderId(ref.provider), ref.model);
-    const providerResult =
-      params.allowCacheLookup === false ? undefined : lookupContextTokens(providerKey);
-    const providerWindow =
-      params.allowCacheLookup === false ? undefined : lookupContextWindow(providerKey);
+    const providerResult = lookupContextTokens(
+      providerContextTokenCacheKey(normalizeProviderId(ref.provider), ref.model),
+    );
+    const providerWindow = lookupContextWindow(
+      providerContextTokenCacheKey(normalizeProviderId(ref.provider), ref.model),
+    );
     const discoveredCap = minPositiveContextTokens(
       providerResult,
       normalizePositiveContextTokens(params.modelContextTokens),
@@ -308,7 +307,7 @@ export function resolveModelContextTokenProjectionFromCache(
     }
   }
 
-  if (params.allowCacheLookup === false || params.allowUnscopedModelLookup === false) {
+  if (params.allowUnscopedModelLookup === false) {
     return { contextTokens: params.fallbackContextTokens, authoredContextTokens };
   }
 

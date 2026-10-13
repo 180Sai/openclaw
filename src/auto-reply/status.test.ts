@@ -2,6 +2,7 @@ import { withTempHome } from "openclaw/plugin-sdk/test-env";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { normalizeTestText } from "../../test/helpers/normalize-text.js";
 import { testing as cliBackendsTesting } from "../agents/cli-backends.test-support.js";
+import { getContextWindowCaches, providerContextTokenCacheKey } from "../agents/context-cache.js";
 import type { OpenClawConfig } from "../config/config.js";
 import { resolveSessionStorePathCore } from "../config/sessions/paths.js";
 import {
@@ -94,6 +95,7 @@ afterEach(() => {
   cliBackendsTesting.resetDepsForTest();
   listPluginCommands.mockReset();
   listPluginCommands.mockImplementation(() => []);
+  getContextWindowCaches().discoveredTokenCache.clear();
 });
 
 type ContextBudgetStatus = NonNullable<
@@ -421,7 +423,7 @@ describe("buildStatusMessage", () => {
     expect(normalized).not.toContain("Fallback: claude-cli/claude-opus-4-7");
     expect(normalized).not.toContain("Auth: unknown");
     expect(normalized).toContain("Endpoint: unknown");
-    expect(normalized).toContain("Context: 36k/?");
+    expect(normalized).toContain("Context: 36k/200k (18%)");
   });
 
   it("prefers active CLI OAuth over selected env API-key labels for runtime aliases", () => {
@@ -917,8 +919,10 @@ describe("buildStatusMessage", () => {
     });
   });
 
-  it("keeps transcript-derived slash model ids in their admitted provider catalog", async () => {
+  it("keeps transcript-derived slash model ids on model-only context lookup", async () => {
     await withStatusHome(async () => {
+      getContextWindowCaches().discoveredTokenCache.set("google/gemini-2.5-pro", 999_000);
+
       const sessionId = "sess-openrouter-google";
       writeTranscriptUsageLog({
         agentId: "main",
@@ -935,10 +939,6 @@ describe("buildStatusMessage", () => {
 
       const text = buildStatusMessage({
         ...modelArgs("openrouter", "google/gemini-2.5-pro"),
-        thinkingCatalog: [
-          { provider: "openrouter", id: "google/gemini-2.5-pro", contextWindow: 999_000 },
-          { provider: "google", id: "gemini-2.5-pro", contextWindow: 2_000_000 },
-        ],
         config: {
           models: {
             providers: {
@@ -961,13 +961,11 @@ describe("buildStatusMessage", () => {
     });
   });
 
-  it("keeps runtime slash model ids in their admitted provider catalog when modelProvider is missing", () => {
+  it("keeps runtime slash model ids on model-only context lookup when modelProvider is missing", () => {
+    getContextWindowCaches().discoveredTokenCache.set("google/gemini-2.5-pro", 999_000);
+
     const text = buildStatusMessage({
       ...modelArgs("openrouter", "google/gemini-2.5-pro"),
-      thinkingCatalog: [
-        { provider: "openrouter", id: "google/gemini-2.5-pro", contextWindow: 999_000 },
-        { provider: "google", id: "gemini-2.5-pro", contextWindow: 2_000_000 },
-      ],
       config: {
         models: {
           providers: {
@@ -991,6 +989,8 @@ describe("buildStatusMessage", () => {
   });
 
   it("keeps provider-aware lookup for legacy fallback runtime slash ids", () => {
+    getContextWindowCaches().discoveredTokenCache.clear();
+
     const text = buildStatusMessage({
       modelRefs: statusModelRefs(
         { provider: "xiaomi", model: "mimo-v2-flash" },
@@ -1034,6 +1034,8 @@ describe("buildStatusMessage", () => {
   });
 
   it("keeps provider-aware lookup for non-fallback runtime slash ids", () => {
+    getContextWindowCaches().discoveredTokenCache.clear();
+
     const text = buildStatusMessage({
       ...modelArgs("openai", "gpt-4o"),
       config: {
@@ -1055,10 +1057,17 @@ describe("buildStatusMessage", () => {
 
     const normalized = normalizeTestText(text);
     expect(normalized).toContain("Context: 49k/777k");
+    expect(normalized).not.toContain("Context: 49k/200k");
   });
 
-  it("keeps bare transcript model ids in their admitted provider catalog", async () => {
+  it("keeps provider-aware lookup for bare transcript model ids", async () => {
     await withStatusHome(async () => {
+      getContextWindowCaches().discoveredTokenCache.set("gemini-2.5-pro", 128_000);
+      getContextWindowCaches().discoveredTokenCache.set(
+        providerContextTokenCacheKey("google-gemini-cli", "gemini-2.5-pro"),
+        1_000_000,
+      );
+
       const sessionId = "sess-google-bare-model";
       writeTranscriptUsageLog({
         agentId: "main",
@@ -1075,10 +1084,6 @@ describe("buildStatusMessage", () => {
 
       const text = buildStatusMessage({
         ...modelArgs("google-gemini-cli", "gemini-2.5-pro"),
-        thinkingCatalog: [
-          { provider: "google-gemini-cli", id: "gemini-2.5-pro", contextWindow: 1_000_000 },
-          { provider: "google", id: "gemini-2.5-pro", contextWindow: 128_000 },
-        ],
         sessionEntry: {
           sessionId,
           totalTokens: 5,
