@@ -24,6 +24,7 @@ import {
 } from "./prepared-model-runtime.catalog-auth.js";
 import type { PreparedModelRuntimeCatalogAccessParams } from "./prepared-model-runtime.catalog-contract.js";
 import { createPreparedModelCatalogProjection } from "./prepared-model-runtime.catalog-projection.js";
+import { retainPreparedModelCatalogPublication } from "./prepared-model-runtime.catalog-publication.js";
 import {
   preparedProviderCatalogCredentials,
   prepareRetainedProviderCatalog,
@@ -41,7 +42,6 @@ import {
   markPreparedModelCatalogFull,
   mergePreparedNativeCatalog,
   prepareModelCatalogPublication,
-  retainPreparedModelCatalogPublication,
 } from "./prepared-model-runtime.full-catalog.js";
 import { capturePreparedModelRuntimeLifetime } from "./prepared-model-runtime.lifecycle.js";
 import { retainPreparedPluginGeneration } from "./prepared-model-runtime.plugin-lifetime.js";

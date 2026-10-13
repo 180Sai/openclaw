@@ -1,4 +1,3 @@
-import { isDeepStrictEqual } from "node:util";
 import { normalizeProviderId } from "@openclaw/model-catalog-core/provider-id";
 import { asPositiveFiniteNumber } from "@openclaw/normalization-core/number-coercion";
 import type { Model } from "../llm/types.js";
@@ -8,7 +7,6 @@ import { withPluginRuntimeGenerationScope } from "../plugins/runtime/generation-
 import { dedupeByKey } from "../shared/dedupe-by-key.js";
 import { discoverModels } from "./agent-model-discovery.js";
 import { getPreparedRuntimeAuthMaterializations } from "./auth-profiles/runtime-materializations.js";
-import { runtimeAuthMetadataState } from "./auth-profiles/runtime-snapshot-owner.js";
 import { loadBundledProviderStaticCatalogContextModels } from "./embedded-agent-runner/model.static-catalog.js";
 import { createPreparedConfiguredRuntimeModelLookup } from "./embedded-agent-runner/model.static-id.js";
 import {
@@ -58,55 +56,6 @@ import type {
 import { AuthStorage } from "./sessions/auth-storage.js";
 
 const fullModelCatalogSnapshots = new WeakSet<ModelCatalogSnapshot>();
-
-function catalogPublicationContent(catalog: ModelCatalogSnapshot) {
-  const { pendingProviders: _pending, refreshFailed: _failed, ...inventory } = catalog;
-  // Scoped merges move providers, not their model preference order. Compare a grouped view
-  // without changing the published order used by model-selection fallbacks.
-  const byProvider = <T extends { provider: string }>(rows: readonly T[] = []) =>
-    rows.toSorted((left, right) => left.provider.localeCompare(right.provider));
-  const byRuntime = <T extends { provider: string }>(
-    scopes: Readonly<Record<string, readonly T[]>> | undefined,
-  ) =>
-    scopes &&
-    Object.fromEntries(
-      Object.entries(scopes).map(([runtime, rows]) => [runtime, byProvider(rows)]),
-    );
-  const auth = getPreparedModelFullCatalogAuth(catalog);
-  return {
-    ...inventory,
-    entries: byProvider(catalog.entries),
-    routeVariants: byProvider(catalog.routeVariants),
-    staticEntries: byProvider(catalog.staticEntries),
-    providerOutcomes: byProvider(catalog.providerOutcomes),
-    nativeProviderOutcomes: byRuntime(catalog.nativeProviderOutcomes),
-    nativeHostRows: byRuntime(catalog.nativeHostRows),
-    authoritative: catalog.authoritative !== false,
-    full: isPreparedModelCatalogFull(catalog),
-    // Workers can observe auth changes before the parent gets a store publication.
-    auth: auth && {
-      modes: auth.authModes,
-      labels: auth.providerAuthLabels,
-      metadata: runtimeAuthMetadataState(auth.authStore),
-    },
-  };
-}
-
-/** Keep inventory identity stable across renewals while adopting the latest private auth. */
-export function retainPreparedModelCatalogPublication(
-  catalog: ModelCatalogSnapshot | undefined,
-  previous: ModelCatalogSnapshot | undefined,
-): ModelCatalogSnapshot | undefined {
-  if (
-    !catalog ||
-    !previous ||
-    !isDeepStrictEqual(catalogPublicationContent(catalog), catalogPublicationContent(previous))
-  ) {
-    return catalog;
-  }
-  copyPreparedModelFullCatalogAuth(catalog, previous);
-  return previous;
-}
 
 /** Builds complete inventory before generation-specific runtime capability projection. */
 export async function prepareFullCatalogFacts(
