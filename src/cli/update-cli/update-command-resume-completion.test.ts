@@ -4,7 +4,7 @@ import { readConfigFileSnapshot } from "../../config/config.js";
 import type { PluginInstallRecord } from "../../config/types.plugins.js";
 import {
   formatDeferredPluginMigration,
-  readDeferredPluginMigrationCompletionsAsync,
+  readDeferredPluginMigrationCompletions,
   readDeferredPluginMigrationsAsync,
   recordDeferredPluginMigrations,
 } from "../../infra/deferred-plugin-migrations.js";
@@ -53,7 +53,7 @@ describe("update completion ownership", () => {
       mocks.plugins.mockImplementationOnce(async () => {
         // The child completed the migration before its buffered warning reached the parent.
         expect(await readDeferredPluginMigrationsAsync()).toEqual([]);
-        expect(await readDeferredPluginMigrationCompletionsAsync()).toEqual([
+        expect(readDeferredPluginMigrationCompletions()).toEqual([
           expect.objectContaining({ pluginId: pending.pluginId }),
         ]);
         if (pendingAgain) {
@@ -144,7 +144,7 @@ describe("update completion ownership", () => {
       vi.mocked(defaultRuntime.error).mock.calls.flat().join("\n"),
     ).toHaveBeenCalledOnce();
     expect(await readDeferredPluginMigrationsAsync()).toEqual([]);
-    expect(await readDeferredPluginMigrationCompletionsAsync()).toEqual([
+    expect(readDeferredPluginMigrationCompletions()).toEqual([
       expect.objectContaining({ pluginId }),
     ]);
     expect(JSON.stringify(reportedResult("repair"))).not.toContain(

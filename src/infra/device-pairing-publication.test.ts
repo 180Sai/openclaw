@@ -17,18 +17,11 @@ import {
   captureNodePairingGeneration,
   isNodePairingGenerationCurrent,
 } from "./device-pairing-node-state.js";
-import {
-  recordPairedNodeConnection,
-  recordPairedNodeHostStats,
-  renamePairedNode,
-} from "./device-pairing-node.js";
+import { recordPairedNodeConnection, recordPairedNodeHostStats } from "./device-pairing-node.js";
 import { getPublishedPairedDeviceBinding } from "./device-pairing-publication.js";
 import { persistDevicePairingStoreState } from "./device-pairing-store.js";
 import { revokeDeviceToken, verifyDeviceToken } from "./device-pairing-tokens.js";
-import {
-  executeDevicePairingMutation,
-  withCurrentDevicePairingSnapshot,
-} from "./device-pairing-worker.js";
+import { withCurrentDevicePairingSnapshot } from "./device-pairing-worker.js";
 import {
   getPairedDevice,
   getPendingDevicePairing,

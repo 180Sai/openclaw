@@ -211,7 +211,10 @@ export class SqliteWorkerBroker {
         (actor.nativeLostObservers ??= new Set()).add(options.onNativeLost);
       }
       actor.references += 1;
-      resumeScheduledMaintenance = suspendSqliteWorkerScheduledMaintenance(actor, options.maintenanceScope);
+      resumeScheduledMaintenance = suspendSqliteWorkerScheduledMaintenance(
+        actor,
+        options.maintenanceScope,
+      );
     } else {
       const slot = await this.acquireSlot(options);
       try {
@@ -244,7 +247,10 @@ export class SqliteWorkerBroker {
         stateDatabasePath: options.stateDatabasePath,
       };
       this.actors.set(key, actor);
-      resumeScheduledMaintenance = suspendSqliteWorkerScheduledMaintenance(actor, options.maintenanceScope);
+      resumeScheduledMaintenance = suspendSqliteWorkerScheduledMaintenance(
+        actor,
+        options.maintenanceScope,
+      );
       slot.actors.add(actor);
       slot.pendingOpens -= 1;
       const opening = actor;

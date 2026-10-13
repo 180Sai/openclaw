@@ -14,11 +14,7 @@ import { onSqliteWalCheckpoint } from "../infra/sqlite-wal-checkpoint.js";
 import { observeSqliteWalPeriodicWork } from "../infra/sqlite-wal-scheduler.test-support.js";
 import * as walAdmission from "../infra/sqlite-wal-write-admission.js";
 import { SqliteWorkerBroker } from "../infra/sqlite-worker-broker.js";
-import {
-  createSqliteWorkerOperationAdmission,
-  withSqliteWorkerOperationAdmission,
-} from "../infra/sqlite-worker-operation-admission.js";
-import { runWithSqliteWorkerStateContext } from "../infra/sqlite-worker-state-context.js";
+import { createSqliteWorkerOperationAdmission } from "../infra/sqlite-worker-operation-admission.js";
 import { storageProcessTestEntrypoints } from "../infra/storage-process-runtime.test-support.js";
 import { createPluginStateKeyedStore } from "../plugin-state/plugin-state-store.js";
 import {
@@ -35,9 +31,7 @@ import {
   openOpenClawStateDatabase,
   runOpenClawStateWriteTransaction,
 } from "./openclaw-state-db.js";
-import { captureOpenClawStateWorkerContext } from "./openclaw-state-worker-context.js";
 import type { SharedStateWalFixtureOperations } from "./openclaw-state-worker-wal.test-support.js";
-import { createSqliteWorkerBackend } from "./openclaw-state.worker.js";
 
 const tempDirs = useAutoCleanupTempDirTracker((cleanup) => {
   afterEach(async () => {
