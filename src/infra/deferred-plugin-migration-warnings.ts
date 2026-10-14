@@ -1,13 +1,12 @@
 /**
  * Select deferred plugin migration warnings that no longer describe current state:
  * the plugin's obligation left the pending ledger, or a later warning for the same
- * plugin superseded it, or the caller reports that plugin's final state itself.
+ * plugin superseded it.
  * Matches both shipped warning forms without reading retired migration reports.
  * Messages are ordered oldest first.
  */
 export async function readRetiredDeferredPluginMigrationWarnings(
   messages: readonly (string | undefined)[],
-  finallyReportedPluginIds: ReadonlySet<string> = new Set(),
 ): Promise<ReadonlySet<string>> {
   const pluginWarnings = new Map<string, string>();
   const latestByPlugin = new Map<string, string>();
@@ -32,10 +31,7 @@ export async function readRetiredDeferredPluginMigrationWarnings(
   return new Set(
     [...pluginWarnings]
       .filter(
-        ([message, pluginId]) =>
-          !pending.has(pluginId) ||
-          latestByPlugin.get(pluginId) !== message ||
-          finallyReportedPluginIds.has(pluginId),
+        ([message, pluginId]) => !pending.has(pluginId) || latestByPlugin.get(pluginId) !== message,
       )
       .map(([message]) => message),
   );

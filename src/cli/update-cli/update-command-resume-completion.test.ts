@@ -81,7 +81,7 @@ describe("update completion ownership", () => {
       expect(reportedResult("repair")).toMatchObject({
         status: pendingAgain ? "warning" : "ok",
       });
-      // The final Doctor pass reports the still-pending migration once; earlier copies are retired.
+      // The final Doctor pass supersedes the package-swap copy of a still-pending migration.
       expect(reportedResult("repair")).toHaveProperty(
         "postUpdate.doctor",
         pendingAgain ? { status: "warning", warnings: [finalPassWarning] } : { status: "ok" },
