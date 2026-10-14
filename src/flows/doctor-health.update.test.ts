@@ -9,8 +9,8 @@ import { withUpdateFailureTriage } from "../cli/update-cli/update-command-triage
 import { withTriageTerminal } from "../commands/triage.test-support.js";
 import { transformConfigFile } from "../config/mutate.js";
 import type { OpenClawConfig } from "../config/types.openclaw.js";
-import type { RunGithubCli } from "../infra/github-issue.js";
 import { formatDeferredPluginMigration } from "../infra/deferred-plugin-migrations.js";
+import type { RunGithubCli } from "../infra/github-issue.js";
 import { DoctorStateMigrationRefusalError } from "../infra/state-migrations.messages.js";
 import type { LegacyStateMigrationStepReceipt } from "../infra/state-migrations.types.js";
 import * as temporaryState from "../infra/tmp-openclaw-dir.js";
