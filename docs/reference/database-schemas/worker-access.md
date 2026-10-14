@@ -439,6 +439,14 @@ contract after schema changes, including another feature's lazy table creation.
 Every write retains transaction-held source, ownership metadata, content-version,
 and write-authority checks. Content markers remain current SQLite snapshot reads;
 only their prepared statements are cached.
+
+Update-history workers bound commit-admission waits to one second. On timeout,
+the transaction rolls back before the same worker command retries, preserving
+FIFO ordering and rereading the current rows. Fresh admission waits outside
+`BEGIN IMMEDIATE`, leaving the serving Gateway's writer free while the updater
+host is busy. Authority refusals and uncertain rollback outcomes are not retried;
+required update and recovery records retain their existing durability.
+
 Candidate validation warms that writer before snapshot selection and holds the
 existing actor operation through validation and copied-state cleanup, including
 silent copy intervals. Idle inspection and actor drainage include the retained
@@ -566,10 +574,14 @@ maintenance clients keep it paused until all release.
 Existing worker-local maintenance and synchronous offline/close checkpoints retain
 their owners; durability, schemas, retention, and update behavior are unchanged.
 
-Worker authority requests wait for the retained host owner's grant or refusal;
-host scheduling delays do not expire that authority. The host still checks current
-authority before granting, and broker failure joins worker exit before releasing
-custody. Native SQLite and broker-capacity admission keep their own deadlines.
+Worker authority requests wait for the retained host owner's grant or refusal
+unless the caller explicitly supplies a `deadlineMs` budget; only update-history
+commit admission opts in. A timeout atomically cancels the request and throws a
+retryable admission error after the synchronous transaction rolls back; the host
+ignores late requests and cannot grant a canceled request. The host still checks
+current authority before granting, and broker failure joins worker exit before
+releasing custody. Native SQLite and broker-capacity admission keep their own
+deadlines.
 Startup, schema work, and offline maintenance use the installation's single
 process owner. Ordinary writes acquire their actual SQLite transaction; they do
 not acquire a separate coordination database or carry a lock-directory namespace.
